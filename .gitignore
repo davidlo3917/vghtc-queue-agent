@@ -1,0 +1,8 @@
+__pycache__/
+*.db
+*.db-wal
+*.db-shm
+*.csv
+status.json
+# 門診手冊 PDF 每月 10 MB，正本在 bucket 的 schedules/
+schedules/*.pdf
