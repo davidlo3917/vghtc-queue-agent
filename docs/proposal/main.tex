@@ -1,0 +1,406 @@
+% VGHTC Queue Agent — Final Project Proposal
+% Build: xelatex main.tex (twice). IEEE-like two-column layout built on article
+% because IEEEtran.cls is not available offline; swap the preamble for
+% \documentclass[conference]{IEEEtran} when it is.
+\documentclass[11pt,twocolumn]{article}
+% ---- Layout switch: READABLE (default) vs COMPACT (strict IEEE 10pt) ----
+% Comment out \readabletrue to get the dense IEEE look.
+\newif\ifreadable \readabletrue
+
+% ---------- page geometry ----------
+\ifreadable
+  \usepackage[a4paper,top=1.9cm,bottom=2.1cm,left=1.7cm,right=1.7cm,columnsep=0.65cm]{geometry}
+\else
+  \usepackage[letterpaper,top=0.75in,bottom=1in,left=0.625in,right=0.625in,columnsep=0.2in]{geometry}
+\fi
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+
+% ---------- fonts: XeTeX + 思源宋體（內文）/ 思源黑體（標題） ----------
+\usepackage{fontspec}
+\setmainfont{Noto Serif CJK TC}[BoldFont={Noto Serif CJK TC Bold},ItalicFont={Noto Serif CJK TC},ItalicFeatures={FakeSlant=0.15}]
+\setsansfont{Noto Sans CJK TC}[BoldFont={Noto Sans CJK TC Bold}]
+\setmonofont{Noto Sans Mono CJK TC}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\ifreadable\linespread{1.15}\else\linespread{1.0}\fi
+
+% ---------- packages ----------
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,array,multirow}
+\usepackage{caption}
+\captionsetup{font=small,labelfont={bf,sf},labelsep=period}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.2em}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric}
+\usepackage{xcolor}
+\usepackage{balance}
+\usepackage{placeins}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+
+% ---------- IEEE-like headings ----------
+\titleformat{\section}{\centering\sffamily\bfseries\large}{\Roman{section}.}{0.5em}{}
+\titlespacing*{\section}{0pt}{2ex plus .5ex minus .2ex}{1.2ex plus .3ex}
+\titleformat{\subsection}{\sffamily\bfseries\normalsize}{\Alph{subsection}.}{0.5em}{}
+\titlespacing*{\subsection}{0pt}{1.6ex plus .4ex minus .2ex}{0.8ex}
+\titleformat{\subsubsection}[runin]{\sffamily\bfseries\normalsize}{\arabic{subsubsection})}{0.4em}{}[：]
+\titlespacing*{\subsubsection}{1em}{0.6ex}{0.4em}
+
+% ---------- IEEE-like title block ----------
+\makeatletter
+\renewcommand{\maketitle}{%
+  \twocolumn[%
+    \begin{center}
+      {\LARGE\sffamily\bfseries \@title\par}\vskip 1.4em
+      {\normalsize \@author\par}\vskip 1.5em
+    \end{center}%
+  ]%
+}
+\makeatother
+
+% ---------- IEEE-like abstract ----------
+\renewenvironment{abstract}{\noindent{\sffamily\bfseries 摘要---}}{\par\vskip 1em}
+
+% ---------- algorithm tweaks ----------
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\renewcommand{\algorithmiccomment}[1]{\hfill$\triangleright$ {\small #1}}
+
+\title{VGHTC Queue Agent：以公開燈號資料預測門診叫號時間\\並主動提醒出門的領域智慧代理人}
+\author{%
+  羅志緯（5115050039）\quad 鄭博仁（5115050003）\quad 張佳筑（5115050030）\\
+  國立中興大學\quad 人工智慧學位學程\\
+  課程：人工智慧與資訊安全\quad 指導教授：陳煥\quad 期末專題提案（Proposal）\quad 2026 年 11 月%
+}
+
+\begin{document}
+\maketitle
+
+% =====================================================================
+\begin{abstract}
+2025 年國人平均每人門診就醫 16.3 次，65 歲以上人口達 20.1\%，台灣正式進入超高齡社會；大型醫院單一診次掛號上百號是常態。本專題對臺中榮民總醫院全院門診燈號的連續觀測顯示：單一下午全院出現 89 次兩次叫號間隔超過 20 分鐘的停滯，各診間每叫一號所需時間中位數 3.2 分鐘但相差近 10 倍，而「已報到待看診人數」中位數僅為剩餘號碼數的 18\%——等待時間取決於後面的人何時出現，而非現在排了幾個人。然而，現有醫院 App 與第三方工具全部以「號碼」為單位提醒，不換算時間、不考慮醫師速度與當日狀態；學術上的候診預測研究則依賴病人無法取得的院內資料，且未處理「幾點出門」這個風險方向與「還要等多久」相反的決策問題。為此，本專題提出 \textbf{VGHTC Queue Agent}：一個只用醫院公開看診進度資料、從病人端建立的門診候診領域智慧代理人。系統由自 2026 年 10 月 22 日起全天候運行的燈號收集器（每分鐘取樣全院、僅存變化）、以醫師為單位的即時與歷史速率特徵、LightGBM 分位數回歸（P20/P50/P80）、編碼叫號規則與診次生命週期的領域知識層，以及一個確定性的監看—推理—決策迴圈組成；LLM 僅用於公告分類與解釋生成。評估以真實燈號資料做時間序列回測，與滾動平均等三種基準線比較 MAE、分位數損失、P80 覆蓋率，以及面向病人的過號率、空等分鐘與通知次數，並以兩週 LINE Bot 實際使用測試。預期產出臺中榮總門診叫號時間資料集與其統計特性、一個在過號率與空等時間上優於固定規則的分位數預測模型，以及一個展示「監看—預測—推理—主動提醒」設計、不蒐集任何個資的 Domain AI Agent。
+\end{abstract}
+
+\noindent\textbf{關鍵詞---}門診候診時間預測、排隊管理、分位數回歸、LightGBM、LLM Agent、LINE Bot、醫療作業管理
+
+% =====================================================================
+\section{Introduction}
+
+\subsection{Attention Getter}
+2025 年國人平均每人門診就醫 16.3 次 \cite{nhia2025}；同年底 65 歲以上人口達 20.1\%，台灣正式進入超高齡社會 \cite{moi2025}，高齡者正是大型醫院門診最主要、也最難使用數位工具的使用者。本專題自 2026 年 10 月 22 日起對臺中榮民總醫院（下稱臺中榮總）全院門診燈號每分鐘一次的連續觀測顯示：皮膚科單一診次最末號達 160；全院單一下午 5 小時內出現 89 次兩次叫號間隔超過 20 分鐘的停滯，最長 86 分鐘；各診間每叫一號所需時間的中位數為 3.2 分鐘，但最快與最慢相差近 10 倍（最快診間 1.0 分鐘，最慢為 CT 檢查室 9.3 分鐘）。同樣是「前面還有 10 號」，病人可能要等 10 分鐘，也可能要等一個多小時，而他沒有任何工具可以分辨這兩種情況。
+
+\subsection{Background}
+臺中榮總在官網提供即時「門診看診進度」：每個診間的目前號次、最末號、過號看診號與已報到待看診人數，每 60 秒自動刷新；官方 App 在掛號查詢中顯示「預估報到時間」\cite{vghtcapp}。病人的典型行為是掛號後不定時查看進度，等號碼「差不多」了再出發 \cite{docbot2020}。門診叫號並非單純先到先服務：病人須插健保卡報到後才會被叫號，未報到的號碼被跳過；過號者重新報到後由系統插回；高齡者享有優先排序——臺北榮總明文「每看 2 位正常號序後，先排 1 位 85 歲以上高齡長者，接續安插 1 位過號者」\cite{vghtpe2025}，臺中榮總診間公告則為 83 歲以上插卡後自動排序 \cite{vghtcnotice}。診次亦有固定生命週期：上午診 08:30、下午診 13:30、夜診 18:00 開診，初診報到截止 11:30／16:30／19:30 \cite{vghtcreg}；醫師請假、代診等狀況以診間公告文字發布。
+
+技術上，候診時間預測已有十年以上累積：從醫院普遍使用的滾動平均，到結合排隊理論與統計學習的混合模型 \cite{ang2016}、分位數回歸 \cite{pak2021}、以即時佇列狀態為核心特徵的樹模型 \cite{shin2024,guo2025,liu2026}，以及 conformal 區間校準 \cite{shahbazi2026}；LLM agent 的架構與安全設計原則亦已成形 \cite{chowa2026,hasan2026}。
+
+\subsection{Problem}
+病人真正想知道的不是「現在看到幾號」，而是兩個決策問題：\textbf{「我的號碼大約幾點會被叫到？」}與\textbf{「我幾點該出門，才能既不過號、也不在醫院空等？」}答案取決於即時系統狀態（現場人數、當日速率、公告）、醫師個別效應與叫號規則，而且會隨時間改變：醫師臨時請假、速度突然變慢、長者與過號者插入，都會讓半小時前的估計失效。因此需要的不是一次性預測，而是一個\textbf{持續監看、在狀態改變時重新推理、並在對的時間主動提醒}的系統。本專題將此定義為 Domain AI Agent 問題：給定診間、午別與號碼 $N$，Agent 須在任一時刻輸出 $N$ 的叫號時間區間與出門建議，並在事件發生時更新。
+
+\subsection{Existing Limitations}
+\textbf{現有工具以號碼為單位，不換算時間。}臺北榮總 App 的「到診前 5 號提醒」\cite{vghtpeapp}、門診小幫手 \cite{docbot2020}、全能掛號王 \cite{seedoctor}、看診進度助手 \cite{opdhelper} 全部採固定號碼差規則；臺中榮總 App 的「預估報到時間」為掛號時的靜態值，不隨當日進度更新，也沒有推播 \cite{vghtcapp}。
+\textbf{學術模型依賴院內資料，且不回到病人端。}文獻中的等待時間預測 \cite{ang2016,pak2021,shin2024,guo2025,wang2025,liu2026} 全部使用醫院內部報到／掛號系統資料，預測對象多為急診等待分鐘數或檢查佇列人數；沒有研究處理「只能從外部觀測公開燈號」時如何學到醫師效應與叫號規則的影響，而文獻同時指出模型須分院訓練、跨機構遷移仍未解決 \cite{ang2016,shin2024,toffaha2025}。
+\textbf{不確定性的方向被單向處理。}既有研究一致主張低估等待比高估更傷人，以非對稱損失或高分位數避免低估 \cite{pak2021,shin2024,zhang2023}；但「幾點出門」的風險方向相反——晚出門的代價是過號——文獻中沒有針對此決策的研究。
+\textbf{Agent 研究集中在對話式預約。}醫療 LLM agent 主要用於預約流程自動化 \cite{hasan2026}，而綜述 \cite{chowa2026} 指出 agent 在需持續追蹤情境的動態環境中最弱。
+
+\subsection{Innovation}
+本專題提出 \textbf{VGHTC Queue Agent}，與既有系統的差異在於：
+(1) \textbf{資料來源}：只用醫院公開的看診進度 API，自建每分鐘的全院燈號資料集，不依賴院內系統、不碰任何個資；
+(2) \textbf{預測對象}：直接預測「號碼 $N$ 的叫號時間」，以醫師為分析單位，從燈號序列學習醫師速率、跳號與插隊的綜合效果；
+(3) \textbf{不確定性與決策分離}：LightGBM 分位數回歸輸出 P20/P50/P80，「還要等多久」用 P50 並附 P80 上界，「幾點出門」用 P20 的叫號時間扣除交通時間；
+(4) \textbf{Agent 而非模型}：確定性的監看—推理—決策迴圈負責何時通知；領域知識層編碼叫號規則、診次生命週期、停診行事曆與公告語意；LLM 只做公告分類與解釋生成；
+(5) \textbf{評估面向病人}：以過號率、平均空等分鐘與通知次數衡量實際價值。
+
+\subsection{Contributions}
+\begin{itemize}
+\item \textbf{資料}：首個以公開燈號建立的臺中榮總門診叫號時間資料集，及跳號、停滯、醫師效應與診次生命週期的量化描述。
+\item \textbf{方法}：從外部燈號序列學習醫師個別效應與叫號規則影響的特徵工程與分位數預測方法，並以排隊式基準線為退路與對照。
+\item \textbf{系統}：可實際使用的 LINE 候診代理人，展示「監看—預測—推理—主動提醒」的 Domain AI Agent 設計。
+\item \textbf{評估}：以病人決策為中心的指標（過號率、空等分鐘、通知次數），以時間序列回測與兩週實際使用驗證。
+\item \textbf{實務}：只用公開資料、對醫院伺服器零額外負擔、不蒐集個資的資料倫理與資安實作範例。
+\end{itemize}
+
+% =====================================================================
+\section{Related Work}
+
+\subsection{AI Technology}
+
+\subsubsection{候診時間預測}
+醫院公布等待時間的傳統做法是滾動平均。Ang 等人 \cite{ang2016} 提出 Q-Lasso，將 Lasso 與排隊理論的流體模型估計量結合，在四家差異很大的醫院急診資料上，均方預測誤差比最佳滾動平均低 30\% 以上，且改善主要來自修正低估。Pak 等人 \cite{pak2021} 以澳洲公立急診的排隊與服務流程變數做機器學習，優於滾動平均 20\% 以上，並主張因病人對低估與高估的感受不對稱，應改用分位數回歸，使嚴重低估的病人數減少 42\%，同時建議將「低估比例」列為正式指標。門診方面，Shin 等人 \cite{shin2024} 在韓國大型醫院兩科比較線性與非線性模型（含 TabNet、FT-Transformer），LightGBM 最佳；TreeSHAP 顯示佇列長度最重要，其次是時段與醫師看診效率；他們並以非對稱損失論證低估造成的不滿大於高估。Guo 等人 \cite{guo2025} 以北京兒童醫院 23 萬筆報到記錄、13 種佇列，只用 6 個排隊理論特徵訓練 9 種模型，樹模型最佳，排隊人數為首要因子，但小樣本佇列表現差（$R^2$ 0.11--0.72）。Wang 等人 \cite{wang2025} 把急診等待改為「是否超過 30 分鐘」的分類，五種模型 AUROC 0.78--0.81，擁擠狀態為首要因子。Liu 等人 \cite{liu2026} 以台灣亞東醫院資料做門診抽血佇列長度多步預測，XGBoost／RF／Lasso 均優於移動平均與上週同時段基準線。
+\textit{啟示}：所有研究皆以滾動平均為基準線；即時佇列狀態是最強特徵、醫師效率次之；樹模型在表格資料上穩定優於線性與深度模型；但全部依賴院內資料。
+
+\subsubsection{排隊理論與 ML 的對決}
+Chocron 等人 \cite{chocron2022} 在多類別服務系統上系統性比較排隊理論預測器與多種 ML，刻意違反標準假設（非平穩、狀態相依服務時間、放棄、不同優先權），結果是排隊理論的預測與 ML 相當、常常更好且計算成本低得多；ML 只在特定條件勝出，例如某類顧客具高優先權。Senderovich 等人 \cite{senderovich2015} 提出 queue mining，以排隊理論為基礎從事件日誌建構多類別延遲預測器，大幅優於忽略排隊結構的迴歸。榮總門診的正常號、過號者與長者正是三個優先權不同的類別，燈號序列就是一種事件日誌。
+
+\subsubsection{不確定性量化}
+Pak \cite{pak2021} 用分位數回歸、Shin \cite{shin2024} 用 Quad-Quad／LINEX 非對稱損失，動機都是低估比高估傷人。Shahbazi 等人 \cite{shahbazi2026} 結合 Bayesian 階層隨機森林與群組感知 conformal 校準，在 3,793 家醫院的階層資料上達到 94.3\% 覆蓋率（目標 95\%），單用 Bayesian 不確定性則嚴重低覆蓋（14.1\%）——區間的覆蓋率必須被校準並報告。
+
+\subsubsection{LLM Agent}
+Chowa 等人 \cite{chowa2026} 綜述 108 篇 LLM agent 研究，將架構拆為核心模型、工具介面、單／多代理框架與推理／規劃／記憶／自省機制，指出 agent 在動態環境表現仍弱。Hasan 等人 \cite{hasan2026} 的 CareConnect 以 function calling 編排 8 個工具處理醫療預約，但將緊急偵測與拒絕醫療建議做成確定性護欄，680 情境達 91.8\% 完成、96\% 安全合規。\textit{啟示}：Agent 的核心迴圈應為確定性程式，LLM 只做可驗證的事。
+
+\subsection{Domain Know-how：門診排隊管理}
+
+\subsubsection{台灣的門診需求結構}
+2025 年平均每人門診 16.3 次 \cite{nhia2025}、65 歲以上達 20.1\% \cite{moi2025}，健保制度下病人可自由至醫學中心掛號，單一診次上百號為常態。
+
+\subsubsection{門診叫號作業規則}
+臺北榮總 2025 年便民手冊 \cite{vghtpe2025}：病人須先插卡報到；「每看 2 位正常號序後，先排 1 位 85 歲以上高齡長者，接續安插 1 位過號者」；過號者再報到後依報到時間重排。臺中榮總診間公告 \cite{vghtcnotice}：83 歲以上插卡後燈號機自動排序。臺中榮總網路掛號說明 \cite{vghtcreg}：上午診 08:30、下午診 13:30、夜診 18:00 開診；初診報到截止 11:30／16:30／19:30；最後報到週一至五 20:00、週六 11:30。直接後果是\textbf{燈號上的號碼差不等於等待時間}：未報到號碼被跳過（本專題觀測單步前進僅 55\%）、長者與過號者從側邊插入、報到截止後不再有新病人。
+
+\subsubsection{病人行為}
+Toffaha 等人 \cite{toffaha2025} 回顧 2010--2025 年 52 篇以 ML 預測未到（no-show）的研究：最佳 AUC 0.75--0.95，未到行為依場域而異，並點名跨機構遷移學習為缺口。對本專題而言，未到與遲到是造成跳號與停滯的來源，模型須從燈號序列間接學到其影響。
+
+\subsubsection{等候心理與期望管理}
+Zhang 等人 \cite{zhang2023} 以 297 個情境實驗發現：告知的預期等待與實際最接近時滿意度最高，差 10 分鐘內仍顯著優於不告知，差 20 分鐘以上則無改善。設計準則：告知區間而非點估計，寧可略高估，且誤差超過約 20 分鐘就失去意義。
+
+\subsubsection{既有系統}
+臺中榮總 App \cite{vghtcapp}：依科別或個人查進度、掛號查詢顯示「預估報到時間」，但無叫號提醒與推播；臺北榮總 App \cite{vghtpeapp}：到診前 5 號提醒；全能掛號王 \cite{seedoctor}：跨院掛號與進度查詢；門診小幫手 \cite{docbot2020}：LINE 訂閱診號、接近時通知；看診進度助手 \cite{opdhelper}：收藏多個診間。共同點：全部以號碼為單位，沒有時間換算、不確定性或狀態變化時的主動通知。
+
+\subsection{Article Summary Table}
+表~\ref{tab:summary} 整理 12 篇核心文獻。
+
+\subsection{Existing Research $\rightarrow$ Limitations $\rightarrow$ Research Gap $\rightarrow$ Our Project}
+\textbf{Existing Research}：以即時佇列狀態為核心的樹模型、分位數與非對稱損失、conformal 校準、queue mining，以及叫號規則與病人心理的公開文件，都已成熟。
+\textbf{Limitations}：(1) 全部使用院內資料，結果不回到病人端；(2) 預測對象是等待分鐘或佇列人數，叫號規則造成的非線性未被建模；(3) 模型不可跨院移植，但沒有研究處理只能外部觀測時如何學醫師效應；(4) 病人端工具全以號碼為單位；(5) LLM agent 未用於「持續監看並在對的時間主動提醒」。
+\textbf{Research Gap}：缺少一個只用公開燈號資料、從病人端建立的門診叫號時間預測與主動提醒系統，能從燈號序列學到醫師速度與叫號規則的效果、以分位數表達不確定性，並以 agent 迴圈在狀態改變時重新推理；台灣尚無以看診進度資料做預測的公開研究。
+\textbf{Our Project}：VGHTC Queue Agent 針對上述缺口，自建資料集、以醫師為單位做分位數預測並校準覆蓋率、把叫號規則與公告語意編碼為領域知識、以確定性迴圈決定何時通知，並以病人端指標評估。
+
+% ---------- summary table ----------
+\begin{table*}[!t]
+\centering\linespread{1.0}\selectfont\scriptsize
+\caption{Article Summary Table}
+\label{tab:summary}
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.55cm} c >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.3cm}@{}}
+\toprule
+\textbf{Ref.} & \textbf{Year} & \textbf{Problem} & \textbf{AI Method} & \textbf{Domain Knowledge} & \textbf{Dataset} & \textbf{Findings} & \textbf{Limitation}\\
+\midrule
+\cite{ang2016} Ang et al., M\&SOM & 2016 & 急診低急迫病人等待時間 & Q-Lasso（Lasso + 排隊流體模型） & 急診分流、排隊理論 & 4 家美國醫院急診歷史資料 & MSPE 比最佳滾動平均低 $>$30\%，主要改善低估 & 急診場域；需院內資料\\
+\cite{pak2021} Pak et al., IJMI & 2021 & 急診候診室等待時間 & ML + 分位數回歸 & 排隊與服務流程變數、日內波動 & 澳洲公立急診 & MSPE 優於滾動平均 $>$20\%；嚴重低估減少 42\%；提議「低估比例」指標 & 低急迫病人；資料量未載明\\
+\cite{shin2024} Shin et al., HCMS & 2024 & 門診等待時間與病人不滿 & LightGBM + TreeSHAP + 非對稱損失、DAES & 佇列長度、醫師效率、時段 & 韓國大型醫院 2 科，約 1.1 萬 + 0.4 萬筆 & 非線性優於線性；佇列長度最重要；非對稱損失減少低估但犧牲精度 & 單院、4 個月；資料不公開\\
+\cite{guo2025} Guo et al., JMIR Med Inform & 2025 & 兒童醫院 13 種佇列等待 & 9 種 ML（RF/XGBoost/LightGBM 最佳） & 排隊理論特徵：排隊人數、到達率 & 北京兒童醫院 230,864 筆 & 排隊人數首要；檢驗佇列 $R^2$ 0.93 & 單院、冬季；小樣本佇列差\\
+\cite{wang2025} Wang et al., BMC HSR & 2025 & 急診等待是否 $>$30 分鐘 & LR/RF/XGBoost/ANN/SVM + SHAP & 擁擠狀態、到院方式 & 美國單一急診 177,665 人次 & AUROC 0.78--0.81；擁擠狀態最重要；應最小化偽陰性 & 單院；無公平性評估\\
+\cite{liu2026} Liu et al., BMC HSR & 2026 & 台灣門診抽血佇列長度多步預測 & XGBoost/RF/Lasso vs 移動平均 & 服務類型、輪椅、完成數 & 亞東醫院院內資料 & RF 最佳；ML 均優於傳統基準 & 預測人數非個人等待\\
+\cite{senderovich2015} Senderovich et al., Inf. Syst. & 2015 & 多類別服務流程延遲預測 & Queue mining：排隊理論預測器 + 迴歸 & 多類別優先權、事件日誌 & 電信、金融真實日誌 & 大幅優於忽略排隊結構的預測器 & 非醫療資料\\
+\cite{chocron2022} Chocron et al., IEEE TEM & 2022 & 排隊理論 vs ML 的延遲預測 & 排隊理論預測器 vs 多種 ML & 多類別、優先權、放棄 & 多類別服務系統 & 排隊理論常與 ML 相當或更好、成本低；ML 在有高優先權類別時勝出 & 非醫療場域\\
+\cite{shahbazi2026} Shahbazi et al., arXiv & 2026 & 階層醫療資料預測區間 & Bayesian 階層 RF + 群組 conformal & 醫院／區域階層 & 61,538 筆、3,793 家醫院 & 覆蓋 94.3\%；區間窄 21\% & 未針對等待時間；預印本\\
+\cite{chowa2026} Chowa et al., AI Review & 2026 & LLM agent 綜述 & 單／多代理、工具、規劃／記憶／自省 & --- & 108 篇、68 個基準 & 動態環境弱；可靠性為開放問題 & 綜述\\
+\cite{hasan2026} Hasan et al., arXiv & 2026 & 醫療預約 LLM agent & Function calling + RAG + 確定性護欄 & 預約流程、緊急偵測 & 680 情境 & 91.8\% 完成、96\% 安全合規 & 預印本；無規劃描述\\
+\cite{toffaha2025} Toffaha et al., Intell.-Based Med. & 2025 & 病人未到預測綜述 & LR、樹模型、集成、深度學習 & 未到行為依場域而異 & 52 篇（2010--2025） & 最佳 AUC 0.75--0.95；缺口：系統整合、遷移學習 & 綜述\\
+\cite{zhang2023} Zhang et al., BMC HSR & 2023 & 告知預期等待對滿意度的影響 & 情境實驗（非 ML） & 等候心理、期望管理 & 眼科門診 297 情境 & 最接近實際最佳；$\pm$10 分仍顯著；$\pm$20 分無效 & 假設情境；單院單醫師\\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+% =====================================================================
+\section{Deep Research}
+領域定位：門診候診時間預測與排隊管理（Healthcare Operations）。「本專題觀測」指 2026-10-22 下午 5 小時、5,310 筆燈號變化的初步分析。
+
+\subsection{五個核心思維模式}
+\subsubsection{等待是系統狀態的函數，不是號碼的函數}
+Little's Law \cite{little1961} 把等待寫成系統內人數與服務速率的關係。證據：Shin \cite{shin2024} 與 Guo \cite{guo2025} 的 SHAP 都以佇列長度為首要特徵；本專題觀測「已報到待看診人數」中位數僅為剩餘號碼數的 18\%，多數人根本不在醫院。\textit{設計}：輸入是即時狀態而非掛號資訊，Agent 必須持續監看，靜態的「預估報到時間」無法成立。
+
+\subsubsection{變異比平均更重要}
+Kingman 的 G/G/1 近似 \cite{hopp2011} 指出等待隨到達與服務時間的變異膨脹。證據：每號中位 3.2 分，但 5 小時內 89 次 $\geq$20 分鐘停滯、最長 86 分鐘；單步前進僅 55\%；Ang \cite{ang2016} 與 Pak \cite{pak2021} 發現滾動平均的主要錯誤是低估。\textit{設計}：輸出分位數而非點估計；指標含覆蓋率與低估比例；停滯當事件偵測。
+
+\subsubsection{服務速率跟著人走}
+文獻的預測模型一律單院或分院訓練 \cite{ang2016,shin2024,guo2025,liu2026}，跨機構遷移列為未解缺口 \cite{toffaha2025}；Shin \cite{shin2024} 以醫師效率為第二或第三重要特徵；本專題觀測各診間（含檢查室）每號 1.0--9.3 分，時段效應明顯。\textit{設計}：分析單位是醫師；代診時退回科別或全院基準線並告知信心下降；鎖定單一醫院是合理的。
+
+\subsubsection{風險不對稱，且方向取決於問題}
+告知等待時低估比高估傷人 \cite{shin2024,pak2021,zhang2023}；但「幾點出門」晚了會過號，保守方向相反。\textit{設計}：「還要等多久」用 P50 附 P80；「幾點出門」用 P20 的叫號時間；評估分別看低估比例與過號率。
+
+\subsubsection{系統是開放的，人會對資訊反應}
+病人會遲到、未到、過號再回來 \cite{toffaha2025}；醫院主動改變順序 \cite{vghtpe2025}；告知資訊會改變期望 \cite{zhang2023}；一旦把預測告訴病人，到達行為就會改變。本專題觀測 3.7\% 的時刻現場人數超過剩餘號碼數（推測為過號重新報到者）。\textit{設計}：叫號規則與公告作為領域知識層輸入；不追求極致精度而求可信區間與重新通知；監測漂移；收集使用者回報形成回饋。
+
+\subsection{三個最重要的專業爭論}
+\subsubsection{排隊理論模型 vs.\ 資料驅動 ML}
+A：排隊模型有解析解、小資料可用、能答反事實；B：真實門診違反幾乎所有排隊假設，ML 更準。\textit{證據}：Chocron \cite{chocron2022} 直接對決——排隊理論常與 ML 相當或更好且成本低，ML 只在有高優先權類別時勝出；Ang \cite{ang2016} 混合；Senderovich \cite{senderovich2015} 以理論結構化預測器；Guo \cite{guo2025} 以理論挑特徵、ML 建模。\textit{共識}：混合。\textit{未解}：小資料佇列、理論先驗作為正則化、反事實。\textit{本專題}：榮總門診正是有優先權的情境，但仍以「號碼差 $\times$ 速率」為基準線與退路，特徵全部從排隊理論導出；回測若 ML 贏不了基準線就用基準線。
+
+\subsubsection{保守估計 vs.\ 準確估計}
+A：寧可讓病人以為要等久一點；B：系統性高估失去信任、把人困在醫院，差 20 分鐘以上病人覺得被騙 \cite{zhang2023}。\textit{證據}：Shin \cite{shin2024} 非對稱損失減少低估但 RMSE 變差；Pak \cite{pak2021} 減少 42\% 嚴重低估；Zhang \cite{zhang2023} $\pm$10 分有效、$\pm$20 分無效。\textit{共識}：給區間，上界管理期望，覆蓋率要校準 \cite{shahbazi2026}。\textit{未解}：區間如何對長輩溝通；「幾點出門」的保守方向相反，文獻幾乎未研究——本專題的 P20 規則是自己的設計，要靠過號率與空等分鐘驗證。
+
+\subsubsection{先到先服務 vs.\ 優先權插隊}
+A：嚴格依號碼最可預測，插隊可被策略性利用；B：醫院已將高齡者列為友善就醫對象 \cite{vghtpe2025,vghtcnotice}，排隊理論的 $c\mu$ 規則 \cite{cox1961} 支持對等待成本高的類別給優先權。\textit{證據}：北榮固定交錯規則；本專題觀測燈號幾乎不倒退（5 小時僅 1 次），推論插隊是「插在下一個」而非「跳回去」（待驗證）；Senderovich \cite{senderovich2015} 的類別可觀測，我們的不是；Chocron \cite{chocron2022} 指出有高優先權類別時 ML 有優勢。\textit{共識}：有限度優先權，規則應公開固定。\textit{未解}：最佳交錯比例；對非優先病人的量化影響；外部看不到年齡時能否從燈號學到插隊效果。\textit{本專題}：不建模年齡，把插隊效果視為醫師速率分佈的一部分讓模型隱性學習，於 Limitations 寫明。
+
+\subsection{十個深度理解問題}
+\begin{enumerate}[label=Q\arabic*.,leftmargin=2.2em]
+\item (Why) 為什麼「前面還有 10 號」在 A 醫師可能是 15 分鐘、在 B 醫師可能是 1 小時？請用資料說明。
+\item (What-if) 若醫院拿掉「已報到待看診人數」欄位，系統會怎樣？哪些預測退化？
+\item (Trade-off) 出門時間從 P20 改成 P10 或 P50，過號率與空等分鐘各如何變化？為何不對稱？
+\item (Failure case) 描述一個系統會給出嚴重錯誤建議的真實情境（代診、API 查無資料、颱風日、停滯 60 分鐘後連叫 5 號），Agent 如何偵測並補救？
+\item (Evidence) 「低估等待比高估傷人」的證據是什麼？能直接套用到「幾點出門」嗎？
+\item (Comparison) 為何不用 LSTM／Transformer 而用 LightGBM 分位數回歸？排隊式基準線有沒有可能贏？
+\item (Design decision) 監看迴圈為何是確定性程式而非讓 LLM 決定要不要通知？LLM 到底做什麼？
+\item (Real-world) 下午診 12:20 出現在 API 但 13:30 才開診，一位 3 號病人 12:30 問「我幾點出門」，系統該怎麼回？
+\item (Evidence／Ethics) 怎麼證明系統對醫院伺服器的負擔「跟一個人開著網頁差不多」？醫院要求停止時資料與服務怎麼處理？
+\item (What-if／Feedback) 若 500 位病人同時使用且都照建議到院，會發生什麼？模型還準嗎？
+\end{enumerate}
+
+% =====================================================================
+\begin{figure*}[!t]
+\centering
+{\linespread{1}\selectfont\resizebox{\textwidth}{!}{\input{figures/architecture_tikz}}}
+\caption{VGHTC Queue Agent 系統架構。實線為資料／控制流，虛線為規則與知識的注入；③ 是確定性的監看—推理—決策迴圈，LLM 只出現在意圖補位、公告分類與解釋生成。}
+\label{fig:arch}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+{\linespread{1}\selectfont\resizebox{\textwidth}{!}{\input{figures/flowchart_tikz}}}
+\caption{訂閱與監看流程：Input $\rightarrow$ Processing $\rightarrow$ AI/Analytics $\rightarrow$ Decision $\rightarrow$ Output，含監看迴圈、事件分支、人機互動與例外處理。}
+\label{fig:flow}
+\end{figure*}
+
+\section{Proposed Scheme}
+
+\subsection{應用情境與範圍}
+對象為臺中榮總門診病人與陪同家屬，三個情境：\textbf{S1 掛號前查詢}（「皮膚科 2526 診平常等多久？」→ 該醫師歷史速率、停滯時段、通常幾點看完）；\textbf{S2 掛號後訂閱}（診間、午別、號碼、交通分鐘數 → 持續監看、預測叫號區間、建議出門時間、時間到推播；可在開診前訂閱，Agent 等診次出現後才開始預測）；\textbf{S3 變化提醒}（偵測代診、請假／延誤公告、速度異常、預測大幅改變、已叫到、診次結束，重新推理並通知）。不掛號、不換診、不查個人掛號資料。系統無法得知使用者是否已報到，所有提醒皆為建議；使用者可按「我到了」停止出門提醒、「已叫到」結束訂閱。
+
+\subsection{System Architecture}
+圖~\ref{fig:arch} 為八個模組。
+\textbf{① User}：病人與家屬，可能是長輩或替長輩操作的家人，介面以按鈕為主。
+\textbf{② Query/Input}：LINE Messaging API（LINE Notify 已於 2025 年停用）；Rich Menu 提供查詢、訂閱、取消；訂閱只需四欄；自由文字交由意圖解析；不要求身分證、病歷號或定位。
+\textbf{③ Planner \& Reasoning Agent}：系統核心，是監看—推理—決策迴圈而非問答機器人。意圖解析規則優先、LLM 補位；依意圖規劃查歷史或建立訂閱；每 60 秒重建特徵、重新預測；綜合預測區間、異常偵測、領域規則與通知策略，決定不動作／更新估計／通知／結束；資料不足時降級為基準線並註明信心下降。
+\textbf{④ Data Acquisition}：唯一即時來源是自建燈號收集器（2026-10-22 上線，GCP e2-micro，systemd 自動重啟、每日備份、監控網頁），每 60 秒一次全院查詢、只存變化到 SQLite（sessions／observations／notice\_changes／polls）。Agent 與收集器同機，直接讀資料庫，\textbf{不對醫院 API 產生額外請求}；訂閱與回饋存於獨立的 Agent 資料庫。輔助來源：每月門診手冊 PDF、停診公告、使用者自填交通時間（選配 Google Maps）。
+\textbf{⑤ Analytics Engine}：特徵包括號碼差、已報到待看人數（注意：是現場人數而非 $N$ 前方人數）、過號人數、今日滾動每號分鐘數、該醫師歷史速率（依星期／午別／時段）、診次已進行時間、距午休／報到截止時間、公告類別、代診旗標、追上最末號狀態；基準線為號碼差 $\times$ 該醫師當日每號分鐘數，依序退回醫師歷史、同科、全院中位數（3.2 分）；模型為 LightGBM 分位數回歸輸出 P20/P50/P80，並以當日與歷史速率比值做異常偵測。
+\textbf{⑥ Domain Knowledge}：叫號規則（跳號、過號插回、83 歲以上優先）、診次生命週期（下午診 12:20--13:36 出現在系統、13:31 才開始叫號；停滯集中於 13 時與中午；看完約 9 分鐘後從 API 消失——因此提前訂閱時保持等待）、停診行事曆（科別清單為空即「今日無門診」，2026-10-24 至 26 光復節連假實測）、公告語意（LLM few-shot 分類為請假／代診／延誤／報到截止，失敗時退回關鍵字規則）。
+\textbf{⑦ Decision/Recommendation}：「還要等多久」回報 P50 並附 P80 上界；「幾點出門」$=$ now $+ W_{P20} -$ 交通 $-$ 緩衝（5 分）；通知策略：到達出門時間推播一次，之後僅在預測變動 $>$15 分、代診／延誤公告、速度異常、已叫到、診次結束時再通知，同類通知 10 分鐘冷卻。
+\textbf{⑧ Output \& Interaction}：推播固定三段——結論、依據（目前號、現場人數、今日每號分鐘數與歷史比較）、不確定性（預計區間）；使用者回報作為真值。
+
+
+
+\subsection{Flowchart}
+圖~\ref{fig:flow} 為完整流程：意圖解析後分流至 S1 查詢或 S2 訂閱；訂閱先檢查今日有無門診與診次是否已出現（提前訂閱時等待），再進入每 60 秒的監看迴圈——狀態變化時重建特徵、重新預測並判斷事件（已叫到、診次結束、代診／延誤／速度異常／預測變動），每輪都檢查是否到達出門時間。人機互動（「我到了」「已叫到」）與例外處理（API 連續失敗、收集器當機、代診致歷史不足）列於圖下方。
+
+
+
+\subsection{Pseudocode}
+演算法~\ref{alg:agent} 是 Agent 的監看迴圈，演算法~\ref{alg:pred} 是預測；拆成兩層以區分「Agent 的邏輯」與「Model 的邏輯」。
+
+\begin{algorithm}[!htb]
+\caption{Queue Agent --- Subscription Monitoring Loop}
+\label{alg:agent}
+\linespread{1.0}\selectfont\begin{algorithmic}[1]\footnotesize
+\REQUIRE subscription $s=(\mathit{room},\mathit{timeFlag},N,\mathit{travelMin})$, call-light store $\mathit{DB}$
+\ENSURE notifications; ground-truth record when $N$ is called
+\IF{$\mathit{DB}.\mathrm{sectionListEmpty}(\mathit{today})$} \STATE notify(``今日無門診''); \textbf{return} \ENDIF
+\STATE $\mathit{sess} \leftarrow \mathit{DB}.\mathrm{findSession}(\mathit{today}, s.\mathit{room}, s.\mathit{timeFlag})$
+\WHILE{$\mathit{sess}=\emptyset$} \STATE sleep(60 s); re-query $\mathit{sess}$ \COMMENT{提前訂閱} \ENDWHILE
+\STATE $\mathit{arrived}\leftarrow$ false; $\mathit{notifiedLeave}\leftarrow$ false; $\mathit{lastEst}\leftarrow\emptyset$
+\WHILE{$\mathit{sess}.\mathit{active}$}
+  \STATE $st \leftarrow \mathit{DB}.\mathrm{latestState}(\mathit{sess})$ \COMMENT{cur\_seq, waiting, passed, doctor, notice}
+  \IF{$st.\mathit{cur\_seq} \geq N$}
+    \STATE notify(``已叫到 $N$ 號''); record($\mathit{sess},N,st.ts$); \textbf{break}
+  \ENDIF
+  \STATE $x \leftarrow \mathrm{BuildFeatures}(\mathit{sess}, st, N)$ \COMMENT{Alg.~\ref{alg:pred}}
+  \STATE $(W_{20},W_{50},W_{80}) \leftarrow \mathrm{Predict}(x)$
+  \STATE $\mathit{drift} \leftarrow \mathrm{rateToday}(\mathit{sess})/\mathrm{hist.rate}(\mathit{sess}.\mathit{doctor})$
+  \STATE $E \leftarrow \mathrm{DetectEvents}(st,\mathit{lastState},\mathit{drift},W_{50},\mathit{lastEst})$
+  \STATE \hspace{1.2em}{\small $E\subseteq\{$doctorChanged, notice$\in\{$請假,代診,延誤$\}$,}
+  \STATE \hspace{1.2em}{\small $|\mathit{drift}-1|>0.5$, $|W_{50}-\mathit{lastEst}|>15\}$}
+  \IF{$E\neq\emptyset$ \AND cooldownOK($E$)} \STATE notify(Explain($E,W_{20},W_{50},W_{80},st$)) \ENDIF
+  \STATE $\mathit{arrived} \leftarrow \mathit{arrived} \lor \mathrm{user.pressed}(\text{``我到了''})$
+  \STATE $\mathit{leaveAt} \leftarrow \mathit{now} + W_{20} - s.\mathit{travelMin} - \mathit{BUFFER}$
+  \IF{$\lnot\mathit{arrived} \land \lnot\mathit{notifiedLeave} \land \mathit{now}\geq\mathit{leaveAt}$}
+    \STATE notify(Explain(``該出門了''$,W_{20},W_{50},W_{80},st$)); $\mathit{notifiedLeave}\leftarrow$ true
+  \ENDIF
+  \STATE $\mathit{lastEst}\leftarrow W_{50}$; $\mathit{lastState}\leftarrow st$; sleep(60 s); refresh $\mathit{sess}$
+\ENDWHILE
+\IF{$\mathit{sess}.\mathit{ended} \land st.\mathit{cur\_seq}<N$} \STATE notify(``診次已結束，請洽診間'') \ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!htb]
+\caption{Wait-Time Estimation with Domain Features}
+\label{alg:pred}
+\linespread{1.0}\selectfont\begin{algorithmic}[1]\footnotesize
+\REQUIRE session $\mathit{sess}$, state $st$, target $N$, history $H$
+\ENSURE $(W_{20},W_{50},W_{80})$ in minutes
+\STATE $\mathit{gap} \leftarrow N - st.\mathit{cur\_seq}$ \COMMENT{號碼差}
+\STATE $\mathit{onsite} \leftarrow st.\mathit{waiting}$ \COMMENT{現場人數，非 $N$ 前方人數}
+\STATE $r_{\mathrm{today}} \leftarrow \mathrm{rollingRate}(\mathit{sess}, 30\,\mathrm{min})$ \COMMENT{今日每號分鐘}
+\STATE $r_{\mathrm{hist}} \leftarrow H.\mathrm{rate}(\mathit{doctor},\mathit{weekday},\mathit{timeFlag},\mathit{hour})$
+\IF{$r_{\mathrm{hist}}=\emptyset$} \STATE $r_{\mathrm{hist}} \leftarrow H.\mathrm{rate}(\mathit{section})$; $\mathit{flag}\leftarrow$ fallback \ENDIF
+\STATE $\mathit{elapsed} \leftarrow \mathit{now}-\mathit{sess}.\mathit{start}$; $\mathit{toBreak} \leftarrow \mathrm{nextBreak}(\mathit{timeFlag})-\mathit{now}$
+\STATE $\mathit{caughtUp} \leftarrow [\,st.\mathit{cur\_seq}-st.\mathit{tot\_seq}=5\,]$ \COMMENT{已追上最末號}
+\STATE $\mathit{nClass} \leftarrow \mathrm{ClassifyNotice}(st.\mathit{notice})$ \COMMENT{LLM few-shot，失敗退回關鍵字}
+\STATE $x \leftarrow (\mathit{gap},\mathit{onsite},st.\mathit{passed},r_{\mathrm{today}},r_{\mathrm{hist}},r_{\mathrm{today}}/r_{\mathrm{hist}},$
+\STATE \hspace{1.2em}$\mathit{elapsed},\mathit{toBreak},\mathit{caughtUp},\mathit{nClass},\mathit{doctorChanged},$
+\STATE \hspace{1.2em}$\mathit{weekday},\mathit{timeFlag},\mathit{hour})$
+\IF{model.trained $\land\ \mathit{flag}\neq$ fallback}
+  \STATE $(W_{20},W_{50},W_{80}) \leftarrow \mathrm{LightGBM\_quantile}(x)$
+\ELSE
+  \STATE $r \leftarrow r_{\mathrm{today}}$ if available else $r_{\mathrm{hist}}$; $W_{50}\leftarrow \mathit{gap}\cdot r$; $W_{20}\leftarrow 0.7W_{50}$; $W_{80}\leftarrow 1.5W_{50}$ \COMMENT{baseline}
+\ENDIF
+\RETURN $(W_{20},W_{50},W_{80})$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Evaluation Plan}
+以收集器累積的真實燈號資料做時間序列回測（前期訓練、後期測試）。真值：號碼 $N$ 的叫號時間為該診次第一筆 $\mathit{cur\_seq}\geq N$ 的觀測時間（誤差 $\leq$60 秒）。基準線：(B0) 固定每號 3.2 分鐘；(B1) 號碼差 $\times$ 該醫師歷史平均；(B2) 文獻常用的滾動平均。指標：MAE、分位數損失（pinball loss）、P80 覆蓋率；面向病人的「過號率」（依建議出門時間到院仍晚於實際叫號的比例）、「平均空等分鐘」、「每次訂閱通知次數」。Final 階段以組員及親友進行兩週 LINE Bot 實際使用測試。
+
+\subsection{Technical Feasibility}
+表~\ref{tab:feas} 列出現況。資料與基礎設施已就緒，模型為 CPU 可訓練的表格模型，介面為成熟的 LINE Messaging API。
+\begin{table}[!htb]
+\centering\linespread{1.0}\selectfont\small
+\caption{技術可行性}
+\label{tab:feas}
+\begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}X@{}}
+\toprule
+項目 & 狀態\\
+\midrule
+資料來源 & 醫院公開 JSON API；欄位意義已以 5 小時 5,310 筆驗證\\
+收集器 & 2026-10-22 上線，GCP 免費層，自動重啟、每日備份、監控網頁\\
+累積資料 & 2 個門診日：259 診次、9,924 筆變化；每日約新增 4--6 千筆\\
+模型 & LightGBM 分位數回歸，CPU 可訓練\\
+介面 & LINE Messaging API（免費方案每月推播 200 則，demo 足夠）\\
+LLM & 僅公告分類與解釋生成，呼叫短、可快取\\
+風險 & 醫院 API 改版（有失敗記錄與告警）；GCP 試用 2026-12-20 到期前須啟用完整帳戶\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{資料倫理與資安}
+只使用無需登入的公開看診進度 API；輪詢頻率與官網自動刷新相同（60 秒），每輪僅一次請求，polls 表可稽核。\textbf{不使用}同頁面的「以身分證／病歷號查詢掛號」API；Agent 不蒐集身分證、病歷號、定位；訂閱結束後刪除 LINE 使用者 ID，只保留去識別化的（診間、號碼、預測、實際叫號時間）。收集器主機不開任何對外連接埠，SSH 僅經 IAP；監控網頁以 Google 登入保護。公告文字送交 LLM 前不含個資。若要對外公開服務，先徵詢醫院資訊室。
+
+\subsection{Expected Outcomes}
+(1) 臺中榮總門診叫號時間資料集與跳號、停滯、醫師效應、診次生命週期的量化描述；(2) 在過號率與空等分鐘上同時優於固定規則基準線的分位數模型，並量化醫師效應與停滯對誤差的貢獻；(3) 可實際使用的 LINE 候診代理人；(4) 一套只用公開資料、不觸及個資的資料倫理實作範例。本提案尚未完成實驗，以上為預期結果。
+
+% =====================================================================
+\balance
+\linespread{1.0}\selectfont\begin{thebibliography}{99}\footnotesize\setlength{\itemsep}{2pt}
+\bibitem{ang2016} S. Ang, S. Kwasnick, M. Bayati, E. Plambeck, and M. Aratow, ``Accurate emergency department wait time prediction,'' \textit{Manufacturing \& Service Operations Management}, vol. 18, no. 1, pp. 141--156, 2016.
+\bibitem{pak2021} A. Pak, B. Gannon, and A. Staib, ``Predicting waiting time to treatment for emergency department patients,'' \textit{Int. J. Medical Informatics}, vol. 145, 104303, 2021.
+\bibitem{shin2024} J. Shin, D. A. Lee, J. Kim, C. Lim, B.-K. Choi, \textit{et al.}, ``Dissatisfaction-considered waiting time prediction for outpatients with interpretable machine learning,'' \textit{Health Care Management Science}, vol. 27, no. 3, pp. 370--390, 2024.
+\bibitem{guo2025} L. L. Guo, R. Tang, J. Y. Wang, \textit{et al.}, ``Predicting waiting times for medical tasks in a pediatric hospital using machine learning: Comprehensive, retrospective, real-world study,'' \textit{JMIR Medical Informatics}, vol. 13, e77297, 2025.
+\bibitem{wang2025} H. Wang, N. Sambamoorthi, D. Sandlin, and U. Sambamoorthi, ``Interpretable machine learning models for prolonged emergency department wait time prediction,'' \textit{BMC Health Services Research}, vol. 25, 403, 2025.
+\bibitem{liu2026} T.-C. Liu, M.-S. Chen, Y.-C. Lee, C.-T. Yang, and C.-J. Lu, ``Developing machine learning multi-step ahead forecasting scheme to predict outpatient queue length in phlebotomy department,'' \textit{BMC Health Services Research}, 2026, doi:10.1186/s12913-026-15327-y.
+\bibitem{senderovich2015} A. Senderovich, M. Weidlich, A. Gal, and A. Mandelbaum, ``Queue mining for delay prediction in multi-class service processes,'' \textit{Information Systems}, vol. 53, pp. 278--295, 2015.
+\bibitem{chocron2022} E. Chocron, I. Cohen, and P. Feigin, ``Delay prediction for managing multiclass service systems: An investigation of queueing theory and machine learning approaches,'' \textit{IEEE Trans. Engineering Management}, 2022 (accepted).
+\bibitem{shahbazi2026} M. A. Shahbazi, A. Baheri, and N. Azadeh-Fard, ``Adaptive conformal prediction via Bayesian uncertainty weighting for hierarchical healthcare data,'' arXiv:2601.01223, Jan. 2026.
+\bibitem{chowa2026} S. S. Chowa, R. Alvi, S. S. Rahman, \textit{et al.}, ``From language to action: A review of large language models as autonomous agents and tool users,'' \textit{Artificial Intelligence Review}, vol. 59, 71, 2026.
+\bibitem{hasan2026} H. Hasan, S. Salman, A. T. Abou Dargham, A. Mohanna, and A. Chehab, ``Toward trustworthy large language model agents in healthcare,'' arXiv:2607.05055, Jul. 2026.
+\bibitem{nhia2025} 衛生福利部中央健康保險署，「2025 年國人平均每人門診就醫次數前二十大疾病」，全民健康保險統計，產製日期 2026-09-01（全國合計 16.32 次／人）。https://www.nhi.gov.tw/ch/cp-6015-0907b-3023-1.html
+\bibitem{moi2025} 內政部統計處，「02-01 人口年齡分配按單齡」，2025 年底（65 歲以上 4,673,155 人，占總人口 23,299,132 人之 20.06\%）。https://statis.moi.gov.tw/micst/webMain.aspx?k=menuy
+\bibitem{vghtpe2025} 臺北榮民總醫院，《便民手冊》第壹章門診服務，114.04.01 更新，第 11 頁。
+\bibitem{vghtcnotice} 臺中榮民總醫院，門診看診進度診間公告（皮膚科 2525--2527 診，2026-10-22 觀測）。https://www.vghtc.gov.tw/OutpatientProcess/5986
+\bibitem{vghtcreg} 臺中榮民總醫院，網路預約掛號說明。https://register.vghtc.gov.tw/register/regDesc.jsp
+\bibitem{toffaha2025} K. Toffaha, M. C. E. Simsekler, M. A. Omar, and I. ElKebbi, ``Predicting patient no-shows using machine learning: A comprehensive review and future research agenda,'' \textit{Intelligence-Based Medicine}, vol. 11, 100229, 2025.
+\bibitem{zhang2023} H. Zhang, W.-M. Ma, J.-J. Zhu, \textit{et al.}, ``How to adjust the expected waiting time to improve patient's satisfaction?'' \textit{BMC Health Services Research}, vol. 23, 455, 2023.
+\bibitem{vghtcapp} 臺中榮民總醫院行動服務 App，App Store，V2.6.6。
+\bibitem{vghtpeapp} 臺北榮總行動就醫服務 App，App Store。
+\bibitem{seedoctor} 全能掛號王 SeeDoctor，App Store。
+\bibitem{docbot2020} 工商時報，「門診小幫手 LINE 診號查詢與通知服務平台」，2020-11-25。
+\bibitem{opdhelper} 看診進度助手，App Store。
+\bibitem{little1961} J. D. C. Little, ``A proof for the queuing formula: $L=\lambda W$,'' \textit{Operations Research}, vol. 9, no. 3, pp. 383--387, 1961.
+\bibitem{hopp2011} W. J. Hopp and M. L. Spearman, \textit{Factory Physics}, 3rd ed. Waveland Press, 2011.
+\bibitem{cox1961} D. R. Cox and W. L. Smith, \textit{Queues}. Methuen, 1961.
+\end{thebibliography}
+
+\end{document}

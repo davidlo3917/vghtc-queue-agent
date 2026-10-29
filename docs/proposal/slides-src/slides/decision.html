@@ -1,0 +1,23 @@
+<section id="decision" data-transition="fade" style="background:#14213D;color:#FBFBF8;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<p style="font-size:24px;font-weight:600;color:#7FD1C8;letter-spacing:2px">PROPOSED SCHEME ・ 不確定性與決策分離</p>
+<h2 style="font-size:60px;font-weight:700;line-height:1.15">兩個問題，兩個相反的保守方向</h2>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1C2C50;padding:40px;border-radius:16px;border:2px solid #2E4270">
+<p style="font-size:26px;font-weight:600;color:#7FD1C8">「還要等多久？」</p>
+<p style="font-size:72px;font-weight:900;line-height:1;color:#FBFBF8">P50 <span style="color:#7FD1C8">+ P80</span></p>
+<p style="font-size:26px;line-height:1.5;color:#DCE6E4">回報中位數，附 P80 上界管理期望。低估等待比高估更讓病人不滿（Shin 2024、Zhang 2023）。</p>
+<p style="font-size:24px;line-height:1.5;color:#BFD8D5">評估：MAE、分位數損失、P80 覆蓋率、低估比例</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1C2C50;padding:40px;border-radius:16px;border:2px solid #2E4270">
+<p style="font-size:26px;font-weight:600;color:#F2A86B">「幾點該出門？」</p>
+<p style="font-size:72px;font-weight:900;line-height:1;color:#FBFBF8">P20 <span style="color:#F2A86B">− 交通 − 緩衝</span></p>
+<p style="font-size:26px;line-height:1.5;color:#DCE6E4">用偏早的叫號時間估計決定出門。晚出門的代價是過號，比多等幾分鐘嚴重；這個方向文獻幾乎沒有研究。</p>
+<p style="font-size:24px;line-height:1.5;color:#BFD8D5">評估：過號率、平均空等分鐘、每次訂閱通知次數</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;background:#1B7F79;padding:28px 36px;border-radius:16px">
+<h3 style="font-size:30px;font-weight:700">推播固定三段</h3>
+<p style="font-size:26px;line-height:1.5;color:#DCEFEC">「建議 14:05 出門」（結論）・「目前 62 號、前面約 9 人已報到、這位醫師今天每號 3.1 分，比平常快」（依據）・「預計 14:30–14:55 叫到」（不確定性）</p>
+</div>
+<aside>這頁是整個設計最核心的判斷。Handoff 和文獻說「用 P80、低估比高估傷人」，那是對「等多久」；出門提醒要反過來。兩個指標也分開。</aside>
+</section>

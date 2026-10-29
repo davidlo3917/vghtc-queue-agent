@@ -1,0 +1,39 @@
+\begin{tikzpicture}[
+  font=\sffamily\fontsize{8}{9.6}\selectfont,
+  box/.style={draw,rounded corners=3pt,align=left,inner sep=6pt,text width=3.4cm,fill=gray!6,minimum height=2.2cm,line width=0.5pt},
+  core/.style={box,fill=blue!6},
+  dk/.style={box,fill=orange!8},
+  arr/.style={-{Latex[length=2mm]},thick},
+  darr/.style={-{Latex[length=2mm]},thick,dashed},
+  lbl/.style={font=\sffamily\scriptsize,fill=white,inner sep=1.5pt},
+  node distance=9mm and 6mm
+]
+% row 1
+\node[box,text width=2.4cm] (u) {\textbf{① User}\\病人／家屬\\（長輩，或替長輩\\操作的家人）};
+\node[box,right=of u,text width=3.0cm] (in) {\textbf{② Query / Input}\\LINE Messaging API\\按鈕：查詢／訂閱／取消\\自由文字（選配）};
+\node[core,right=of in,text width=4.0cm] (ag) {\textbf{③ Planner \& Reasoning Agent}\\意圖解析（規則優先，LLM 補位）\\任務規劃：查歷史／建立訂閱\\監看迴圈：每 60 秒重算\\決策：不動作／更新／通知／結束\\不確定性評估、資料不足時降級};
+\node[box,right=of ag,text width=3.8cm] (dec) {\textbf{⑦ Decision / Recommendation}\\等多久：P50，附 P80 上界\\出門：now $+W_{P20}-$交通$-$緩衝\\通知策略：事件觸發、閾值、\\10 分鐘冷卻};
+\node[box,right=of dec,text width=3.0cm] (out) {\textbf{⑧ Output \& Interaction}\\LINE 推播／回覆\\結論＋依據＋區間\\按鈕：「我到了」\\「已叫到」};
+% row 2
+\node[box,below=of in,text width=3.7cm,xshift=-3mm] (data) {\textbf{④ Data Acquisition}\\燈號收集器（GCP VM，每 60 秒\\全院一次，只存變化）\\燈號資料庫 SQLite\\Agent 資料庫（訂閱／回饋）\\門診手冊 PDF、交通時間};
+\node[box,below=of ag,text width=4.0cm] (an) {\textbf{⑤ Analytics Engine}\\特徵建構：即時狀態＋醫師歷史\\速率＋公告類別\\基準線：號碼差 $\times$ 每號分鐘數\\LightGBM 分位數 P20/P50/P80\\異常偵測：今日 vs 歷史速率};
+\node[dk,below=of dec,text width=4.0cm] (dk) {\textbf{⑥ Domain Knowledge}\\叫號規則：跳號、過號插回、83+ 優先\\診次生命週期：開診、午休、報到截止\\停診行事曆：科別清單空＝無診\\公告分類 LLM：請假／代診／延誤};
+% main flow
+\draw[arr] (u) -- (in);
+\draw[arr] (in) -- (ag);
+\draw[arr] (ag) -- (dec);
+\draw[arr] (dec) -- (out);
+% feedback to user (top)
+\draw[arr] (out.north) -- ++(0,6mm) -| (u.north) node[lbl,pos=0.62,above=1pt]{推播／回覆};
+% data & knowledge into analytics
+\draw[arr] (data) -- (an);
+\draw[arr] (dk) -- (an);
+\draw[arr] (an) -- (ag);
+% knowledge also constrains decisions
+\draw[darr] (dk.north) -- (dec.south) node[lbl,midway,right=1pt]{規則};
+% agent writes subscriptions
+\draw[darr] (ag.south west) ++(0,2mm) -| (data.north east) node[lbl,pos=0.3,above=1pt]{訂閱};
+% user feedback to agent DB (bottom)
+\draw[arr] (out.south) -- ++(0,-6mm) |- ($(data.south)+(0,-6mm)$) -- (data.south);
+\node[lbl] at ($(an.south)+(0,-7.5mm)$) {使用者回饋（實際叫號時間）→ Agent 資料庫};
+\end{tikzpicture}

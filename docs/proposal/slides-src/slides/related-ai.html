@@ -1,0 +1,13 @@
+<section id="related-ai" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">RELATED WORK ・ AI TECHNOLOGY</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.15">文獻告訴我們四件事</h2>
+<table style="font-size:28px;line-height:1.45;color:#1A2433">
+<tr style="background:#14213D;color:#FBFBF8"><th style="width:30%;text-align:left;padding:16px 20px">主題</th><th style="width:45%;text-align:left">發現</th><th style="width:25%;text-align:left">代表文獻</th></tr>
+<tr><td><b>候診時間預測</b></td><td>即時佇列狀態是最強特徵；樹模型穩定勝過線性與深度模型</td><td>Ang 2016、Pak 2021、Shin 2024、Guo 2025</td></tr>
+<tr style="background:#EEF2F1"><td><b>排隊理論 vs ML</b></td><td>理論常與 ML 相當；ML 只在有優先權插隊時明顯勝出</td><td>Chocron 2022、Senderovich 2015</td></tr>
+<tr><td><b>不確定性</b></td><td>低估比高估傷人；區間的覆蓋率必須校準並報告</td><td>Pak 2021、Shahbazi 2026</td></tr>
+<tr style="background:#EEF2F1"><td><b>LLM Agent</b></td><td>動態監看是 agent 最弱的情境；安全關鍵的決策應是確定性護欄</td><td>Chowa 2026、Hasan 2026</td></tr>
+</table>
+<p style="font-size:30px;line-height:1.5;font-weight:600;color:#D9772B">共同限制：全部用院內資料，預測的是等待分鐘或人數，不是「我的號碼幾點會到」。</p>
+<aside>細節備查：Ang 的 Q-Lasso 與 Pak 的分位數回歸比滾動平均好 20–30%，改善主要來自修正低估。Shin 2024 用 SHAP 證明佇列長度最重要、醫師效率次之，LightGBM 勝過 TabNet 和 FT-Transformer。Guo 2025 只用 6 個排隊特徵在北京兒童醫院達 R² 0.93。Chocron 2022 在 IEEE TEM 直接對決：排隊理論預測器常與 ML 相當甚至更好、成本低得多，ML 只在某類顧客有高優先權時勝出——這正是榮總的情境。Shahbazi 2026 示範單用 Bayesian 不確定性會嚴重低覆蓋。Hasan 2026 的醫療預約 agent 把緊急偵測做成確定性護欄而非交給 LLM。</aside>
+</section>

@@ -1,0 +1,22 @@
+<section id="controversies" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">DEEP RESEARCH Q2 ・ 三個最重要的專業爭論</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.15">三個爭論，三個立場</h2>
+<div style="display:flex;gap:28px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#EEF2F1;padding:40px;border-radius:16px">
+<h3 style="font-size:34px;font-weight:700;line-height:1.3">排隊理論<br>vs. 機器學習</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">共識：混合——理論挑特徵、ML 建模</p>
+<p style="font-size:26px;line-height:1.5;color:#1B7F79;font-weight:600">我們：兩個都做，回測贏不了基準線就用基準線</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#EEF2F1;padding:40px;border-radius:16px">
+<h3 style="font-size:34px;font-weight:700;line-height:1.3">保守估計<br>vs. 準確估計</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">共識：給區間，上界管理期望，覆蓋率要校準</p>
+<p style="font-size:26px;line-height:1.5;color:#1B7F79;font-weight:600">我們：「幾點出門」方向相反，文獻沒研究，P20 規則要自己驗證</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#EEF2F1;padding:40px;border-radius:16px">
+<h3 style="font-size:34px;font-weight:700;line-height:1.3">先到先服務<br>vs. 優先權插隊</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">共識：有限度優先權，規則公開固定</p>
+<p style="font-size:26px;line-height:1.5;color:#1B7F79;font-weight:600">我們：看不到年齡，不建模，讓模型隱性學習</p>
+</div>
+</div>
+<aside>每題的 A/B/證據/未解備查。爭論一：A 排隊模型有解析解、小資料可用、能答反事實；B 真實門診違反所有假設。證據：Chocron 2022 直接對決，排隊理論常相當或更好，ML 只在有高優先權類別時勝出——榮總正是這種情境。未解：小資料佇列、反事實。爭論二：A 寧可讓病人以為要等久；B 高估失去信任、把人困在醫院。證據：Shin 非對稱損失減少低估但犧牲精度；Zhang ±10 分有效、±20 分無效。未解：區間如何對長輩溝通。爭論三：A 嚴格依號碼最可預測、插隊可被策略性利用；B 高齡友善、cμ 規則支持對等待成本高者優先。證據：北榮固定交錯規則；我們觀測燈號幾乎不倒退，推論插隊是插在下一個（待驗證）。未解：最佳交錯比例；外部看不到年齡時能否學到插隊效果。</aside>
+</section>

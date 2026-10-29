@@ -1,0 +1,21 @@
+<section id="questions" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">DEEP RESEARCH Q3 ・ 十個深度理解問題</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.15">分辨「真正懂」和「背定義」</h2>
+<div style="display:flex;gap:48px">
+<ol style="flex:1;font-size:27px;line-height:1.6;color:#1A2433">
+<li><b>Why</b>　為什麼前面 10 號在 A 醫師是 15 分、B 醫師是 1 小時？</li>
+<li><b>What-if</b>　拿掉「已報到待看診人數」欄位會怎樣？</li>
+<li><b>Trade-off</b>　出門時間從 P20 改成 P10 或 P50，會發生什麼？</li>
+<li><b>Failure</b>　哪種情境會給出嚴重錯誤建議？怎麼補救？</li>
+<li><b>Evidence</b>　「低估比高估傷人」能套用到「幾點出門」嗎？</li>
+</ol>
+<ol start="6" style="flex:1;font-size:27px;line-height:1.6;color:#1A2433">
+<li><b>Comparison</b>　為何用 LightGBM 不用 LSTM／Transformer？</li>
+<li><b>Design</b>　為何迴圈是確定性程式，不讓 LLM 決定？</li>
+<li><b>Real-world</b>　12:30 時 3 號病人問幾點出門，怎麼回？</li>
+<li><b>Ethics</b>　怎麼證明對醫院負擔跟一個人開網頁一樣？</li>
+<li><b>Feedback</b>　500 人同時照建議到院，模型還準嗎？</li>
+</ol>
+</div>
+<aside>涵蓋規範的八種推理層次。第 8 題要知道診次生命週期（下午診 12:20 出現在 API 但 13:30 才開診，cur_seq = 0 時不能用速率外推，要回「約 13:30 開診，建議 13:10 出門」）。第 10 題要承認「不知道，但有監測漂移和回饋資料」。第 4 題的例子：代診、API 查無資料、颱風日、停滯 60 分鐘後連叫 5 號。</aside>
+</section>

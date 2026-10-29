@@ -1,0 +1,9 @@
+<section id="architecture" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:28px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">PROPOSED SCHEME ・ SYSTEM ARCHITECTURE</p>
+<h2 style="font-size:56px;font-weight:700;line-height:1.15">八個模組：③ 是確定性的監看—推理—決策迴圈</h2>
+<div style="flex:1;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:2px solid #D7DEDC;border-radius:16px;padding:24px">
+<img src="/_blob/bcf6cfb9f8061cd1a1627edaef5d54ca" alt="VGHTC Queue Agent 系統架構圖：① User、② Query/Input、③ Planner &amp; Reasoning Agent、④ Data Acquisition、⑤ Analytics Engine、⑥ Domain Knowledge、⑦ Decision/Recommendation、⑧ Output &amp; Interaction" style="width:1600px;height:600px;object-fit:contain">
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6A7179">實線：資料／控制流　虛線：規則與知識的注入　LLM 只出現在意圖補位、公告分類、解釋生成</p>
+<aside>照 ①→⑧ 的編號講。重點：④ Agent 直接讀收集器的資料庫，不對醫院 API 產生額外請求；⑥ 領域知識是用規則和特徵注入，不是期待模型自己發現。</aside>
+</section>

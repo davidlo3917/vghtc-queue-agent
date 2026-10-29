@@ -1,0 +1,24 @@
+<section id="feasibility" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">TECHNICAL FEASIBILITY</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.15">資料已經在收了</h2>
+<div style="display:flex;gap:40px;align-items:center">
+<div style="flex:3;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:2px solid #D7DEDC;border-radius:16px;padding:12px">
+<img src="/_blob/e54ba68c9a7353b2cb7e01524e5bb2d7" alt="監控網頁截圖：累積 2 天 259 診次 9,924 筆變化、備份與排程狀態" style="width:1000px;height:560px;object-fit:contain">
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<p style="font-size:72px;font-weight:900;color:#14213D;line-height:1">10/22</p>
+<p style="font-size:26px;color:#4A5568">起全天候運行於 GCP，自動重啟、每日備份</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<p style="font-size:72px;font-weight:900;color:#14213D;line-height:1">9,924</p>
+<p style="font-size:26px;color:#4A5568">筆燈號變化、259 個診次，每個門診日約新增 5 千筆</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<p style="font-size:72px;font-weight:900;color:#1B7F79;line-height:1">1 次</p>
+<p style="font-size:26px;color:#4A5568">每 60 秒對醫院 API 一次請求，和官網頁面自動刷新相同</p>
+</div>
+</div>
+</div>
+<aside>截圖是 10/26 的真實狀態：當天 0 診次是光復節連假醫院停診，我們查了公告確認，不是收集器壞掉——這反而證明「科別清單為空 = 今日無診」這條領域知識。15 個 API 欄位意義以 5 小時 5,310 筆驗證。模型 LightGBM CPU 可訓練；介面 LINE Messaging API；LLM 只做分類與解釋，可快取。風險：醫院 API 改版（有失敗記錄與告警）、GCP 試用 12/20 到期前要啟用完整帳戶。</aside>
+</section>

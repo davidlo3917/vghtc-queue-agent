@@ -1,0 +1,25 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-10-26T06:30:00Z"},
+  "lists": "css",
+  "title": "VGHTC Queue Agent Proposal",
+  "order": [
+    "cover", "hook", "motivation", "background", "problem", "limitations",
+    "related-ai", "related-domain", "summary-table", "gap",
+    "mindsets", "controversies", "questions",
+    "scope", "architecture", "modules", "flowchart", "alg1", "alg2", "decision",
+    "evaluation", "feasibility", "ethics", "outcomes", "closing"
+  ],
+  "sections": {
+    "s1": {"description": "動機與問題：為什麼號碼差不等於等待時間", "start": "cover"},
+    "s2": {"description": "文獻回顧與 Research Gap", "start": "related-ai"},
+    "s3": {"description": "Deep Research：思維模式、爭論與深度問題", "start": "mindsets"},
+    "s4": {"description": "Proposed Scheme：Agent 設計、架構、流程與演算法", "start": "scope"},
+    "s5": {"description": "評估、可行性、倫理與預期成果", "start": "evaluation"}
+  },
+  "faces": {
+    "noto-sans-tc": {"family": "Noto Sans TC", "href": "https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap"},
+    "jetbrains-mono": {"family": "JetBrains Mono", "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"}
+  },
+  "designSystems": []
+}

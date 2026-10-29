@@ -1,0 +1,35 @@
+<section id="alg1" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">PSEUDOCODE ・ ALGORITHM 1</p>
+<h2 style="font-size:60px;font-weight:700;line-height:1.15">Agent 的監看迴圈</h2>
+<div style="display:flex;gap:40px;align-items:stretch">
+<div data-text style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:26px;line-height:1.5;background:#14213D;color:#E6EDF3;padding:36px 40px;border-radius:16px">
+<p>01: wait until session appears        ▷ 提前訂閱</p>
+<p>02: while session active:</p>
+<p>03:   st ← latest state (cur_seq, waiting, notice)</p>
+<p>04:   if st.cur_seq ≥ N: notify("已叫到"); record; break</p>
+<p>05:   (W20, W50, W80) ← Predict(features)   ▷ Alg. 2</p>
+<p>06:   E ← DetectEvents(代診 | 延誤 | 速度異常 | 預測變動&gt;15)</p>
+<p>07:   if E ≠ ∅ and cooldownOK: notify(Explain(E))</p>
+<p>08:   leaveAt ← now + W20 − travel − buffer</p>
+<p>09:   if not arrived and now ≥ leaveAt: notify("該出門了")</p>
+<p>10:   sleep(60 s)</p>
+<p>11: if ended and cur_seq &lt; N: notify("診次已結束")</p>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;justify-content:center;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px;border-left:6px solid #1B7F79;padding:8px 0 8px 28px">
+<h3 style="font-size:30px;font-weight:700">每輪兩件事</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">狀態變了就重算、判斷事件；不管變沒變都檢查出門時間</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;border-left:6px solid #1B7F79;padding:8px 0 8px 28px">
+<h3 style="font-size:30px;font-weight:700">只在該說話時說話</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">事件觸發 + 冷卻，不是每分鐘推播</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;border-left:6px solid #D9772B;padding:8px 0 8px 28px">
+<h3 style="font-size:30px;font-weight:700">出門用 W20</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">偏早的估計，寧可早到不要過號</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6A7179">完整 31 行版本見 Proposal 文件 Algorithm 1</p>
+<aside>投影片是 11 行的濃縮版。完整版還有：今日無門診直接回覆；arrived 旗標由「我到了」按鈕設定；lastEst/lastState 用來偵測預測變動；事件集合 E 的定義 doctorChanged、notice∈{請假,代診,延誤}、|drift−1|>0.5、|W50−lastEst|>15。</aside>
+</section>

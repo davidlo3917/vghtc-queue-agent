@@ -1,0 +1,35 @@
+<section id="alg2" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">PSEUDOCODE ・ ALGORITHM 2</p>
+<h2 style="font-size:60px;font-weight:700;line-height:1.15">Model 的預測</h2>
+<div style="display:flex;gap:40px;align-items:stretch">
+<div data-text style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:26px;line-height:1.5;background:#14213D;color:#E6EDF3;padding:36px 40px;border-radius:16px">
+<p>01: gap    ← N − cur_seq            ▷ 號碼差</p>
+<p>02: onsite ← waiting                ▷ 現場人數</p>
+<p>03: rToday ← rolling rate (30 min)  ▷ 今日每號分鐘</p>
+<p>04: rHist  ← doctor history rate    ▷ 退回同科、全院</p>
+<p>05: nClass ← ClassifyNotice(notice) ▷ LLM，退回關鍵字</p>
+<p>06: x ← (gap, onsite, rToday, rHist, 時段, 距截止, nClass, …)</p>
+<p>07: if model trained:</p>
+<p>08:   (W20, W50, W80) ← LightGBM_quantile(x)</p>
+<p>09: else:                           ▷ baseline</p>
+<p>10:   W50 ← gap · r; W20 ← 0.7·W50; W80 ← 1.5·W50</p>
+<p>11: return (W20, W50, W80)</p>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;justify-content:center;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px;border-left:6px solid #1B7F79;padding:8px 0 8px 28px">
+<h3 style="font-size:30px;font-weight:700">特徵全部從排隊理論來</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">號碼差、現場人數、速率、時段、公告</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;border-left:6px solid #1B7F79;padding:8px 0 8px 28px">
+<h3 style="font-size:30px;font-weight:700">基準線既是退路也是對照</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">號碼差 × 每號分鐘數；贏不了它就用它</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;border-left:6px solid #D9772B;padding:8px 0 8px 28px">
+<h3 style="font-size:30px;font-weight:700">LLM 只出現在一行</h3>
+<p style="font-size:26px;line-height:1.5;color:#4A5568">公告分類，而且有規則退路</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6A7179">完整版見 Proposal 文件 Algorithm 2</p>
+<aside>補充：onsite 已驗證是「現場人數」不是「N 前方人數」，中位數只占剩餘號碼 18%，是擁擠度特徵。完整特徵還有過號人數、診次已進行時間、caughtUp（cur_seq − tot_seq = 5 代表追上最末號）、doctorChanged、weekday。每號分鐘數本身已隱含跳號效果，所以基準線不需要另外算跳號比例。</aside>
+</section>

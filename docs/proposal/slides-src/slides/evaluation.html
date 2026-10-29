@@ -1,0 +1,21 @@
+<section id="evaluation" data-transition="fade" style="background:#FBFBF8;color:#1A2433;font-family:'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<p style="font-size:24px;font-weight:600;color:#1B7F79;letter-spacing:2px">EVALUATION PLAN</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.15">用真實資料回測，用病人的指標評分</h2>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#EEF2F1;padding:44px;border-radius:16px">
+<h3 style="font-size:34px;font-weight:700">對照組</h3>
+<p style="font-size:28px;line-height:1.6;color:#4A5568">固定每號 3.2 分<br>號碼差 × 醫師歷史平均<br>滾動平均（文獻基準線）</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#EEF2F1;padding:44px;border-radius:16px">
+<h3 style="font-size:34px;font-weight:700">模型指標</h3>
+<p style="font-size:28px;line-height:1.6;color:#4A5568">MAE<br>分位數損失<br>P80 覆蓋率</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#14213D;color:#FBFBF8;padding:44px;border-radius:16px">
+<h3 style="font-size:34px;font-weight:700;color:#7FD1C8">病人指標</h3>
+<p style="font-size:28px;line-height:1.6;color:#DCE6E4">過號率<br>平均空等分鐘<br>每次訂閱通知次數</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.5;font-weight:600">真值：該診次第一筆 cur_seq ≥ N 的觀測時間，誤差不超過 60 秒。</p>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6A7179">Proposal 階段尚未完成實驗；Final 階段另有組員與親友兩週 LINE Bot 實測</p>
+<aside>時間序列回測：前期訓練、後期測試，不洩漏。每個觀測時點 × 每個剩餘號碼 = 一筆樣本。10/23 颱風日要標記。過號率定義：照建議出門時間到院仍晚於實際叫號的比例。病人端三個指標是我們自己定義的，文獻沒有，對應 Innovation 第五點。</aside>
+</section>

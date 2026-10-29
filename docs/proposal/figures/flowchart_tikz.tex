@@ -1,0 +1,68 @@
+\begin{tikzpicture}[
+  font=\sffamily\fontsize{9}{10.8}\selectfont,
+  proc/.style={draw,rounded corners=2pt,align=center,inner sep=5pt,fill=gray!6,minimum height=9mm,line width=0.5pt},
+  dec/.style={draw,diamond,aspect=2.4,align=center,inner sep=2pt,fill=yellow!12,line width=0.5pt},
+  term/.style={draw,rounded corners=4mm,align=center,inner sep=5pt,fill=gray!18,minimum height=8mm},
+  note/.style={draw,dashed,align=left,inner sep=5pt,fill=blue!4},
+  arr/.style={-{Latex[length=2.2mm]},line width=0.6pt},
+  lbl/.style={font=\sffamily\fontsize{8}{9.6}\selectfont,fill=white,inner sep=1.5pt},
+  node distance=7mm and 7mm
+]
+% ---------- routing (top) ----------
+\node[term] (start) {使用者訊息／按鈕};
+\node[dec,right=of start] (intent) {意圖解析\\規則優先，LLM 補位};
+\node[proc,right=16mm of intent] (hist) {讀歷史：醫師速率、\\停滯時段、結束時間};
+\node[proc,right=of hist] (sum) {回覆統計摘要};
+\node[term,right=of sum] (end1) {結束};
+\node[dec,below=9mm of hist] (today) {今日有診？};
+\node[proc,right=of today] (nodoc) {回覆今日無門診};
+\node[dec,right=of nodoc] (appear) {診次已出現？};
+\node[proc,right=of appear] (sub) {建立訂閱\\進入監看};
+
+\draw[arr] (start) -- (intent);
+\draw[arr] (intent) -- node[lbl,above]{S1 查詢診間} (hist);
+\draw[arr] (hist) -- (sum);
+\draw[arr] (sum) -- (end1);
+\draw[arr] (intent) |- node[lbl,pos=0.75,above]{S2 訂閱號碼 $N$} (today);
+\draw[arr] (today) -- node[lbl,above]{否} (nodoc);
+\draw[arr] (nodoc.north) |- (end1.west);
+\draw[arr] (today.south) -- ++(0,-5mm) -| node[lbl,pos=0.25,below]{是} (appear.south);
+\draw[arr] (appear) -- node[lbl,above]{是} (sub);
+\draw[arr] (appear.north) -- ++(0,4mm) -| node[lbl,pos=0.25,above]{否：每 60 秒再查} ($(appear.north)+(-10mm,0)$) -- ($(appear.north)+(-10mm,0.5mm)$);
+
+% ---------- monitoring loop ----------
+\node[proc,below=20mm of today,xshift=-6mm] (read) {讀最新狀態\\cur\_seq, waiting,\\notice, doctor};
+\node[dec,right=of read] (chg) {狀態變化？};
+\node[proc,right=of chg] (pred) {特徵建構＋領域規則\\預測 $W_{20}/W_{50}/W_{80}$\\異常偵測};
+\node[dec,right=of pred] (evt) {事件？};
+\node[proc,below=9mm of evt,align=left,xshift=14mm] (n1) {\textbf{已叫到}（cur\_seq $\ge N$）\\通知、存實際叫號時間 → 結束訂閱};
+\node[proc,below=4mm of n1,align=left] (n3) {\textbf{診次結束}\\通知「診次已結束」→ 結束訂閱};
+\node[proc,below=4mm of n3,align=left] (n2) {\textbf{代診／延誤公告／速度異常／}\\\textbf{預測變動 $>$15 分}\\通知狀態改變＋新估計};
+\node[dec] (leave) at ($(pred |- n2)+(-9mm,-24mm)$) {到出門時間？\\$\mathit{now}\ge T_{P20}-$交通$-$緩衝};
+\node[proc,align=left] (push) at ($(n2 |- leave)+(5mm,0)$) {\textbf{是}（未通知過、未按「我到了」）\\推播：該出門了\\結論＋依據＋區間};
+\node[proc] (wait) at (read |- leave) {等待 60 秒};
+
+\draw[arr] (sub.south) -- ++(0,-4mm) -| (read.north);
+\draw[arr] (read) -- (chg);
+\draw[arr] (chg) -- node[lbl,above]{是} (pred);
+\draw[arr] (pred) -- (evt);
+\coordinate (fan) at ($(evt.south)+(0,-4mm)$);
+\coordinate (bus) at ($(n1.west)+(-5mm,0)$);
+\draw[arr] (evt.south) -- (fan) -| (bus) -- (n1.west);
+\draw[arr] (bus) |- (n3.west);
+\draw[arr] (bus) |- (n2.west);
+\draw[arr] (n2.south) -- node[lbl,right]{再檢查出門時間} (push.north);
+\draw[arr] (fan) -| node[lbl,pos=0.75,right]{無} (leave.north);
+\draw[arr] (chg.south) -- node[lbl,right]{否} ++(0,-8mm) -| (leave.north);
+\draw[arr] (leave) -- (push);
+\draw[arr] (leave) -- node[lbl,above]{否} (wait);
+\draw[arr] (push.south) -- ++(0,-4mm) -| (wait.south);
+\draw[arr] (wait.north) -- (read.south);
+
+\begin{scope}[on background layer]
+\node[draw,rounded corners=3pt,dashed,fit=(read)(chg)(pred)(evt)(n1)(n2)(n3)(leave)(push)(wait),inner sep=6mm,fill=gray!3,label={[font=\sffamily\small\bfseries,anchor=north west]north west:監看迴圈（每 60 秒）}] (loop) {};
+\end{scope}
+
+\node[note,below=4mm of loop.south west,anchor=north west,text width=12cm] (note) {\textbf{人機互動：}使用者可隨時按「我到了」→ 停止出門提醒、繼續監看；「已叫到」→ 存實際叫號時間、結束訂閱。\\
+\textbf{例外處理：}API 連續失敗 $\ge$3 輪 → 以最後已知狀態推估並標註「資料可能延遲」；收集器當機（polls 缺口）→ 通知「暫時無法取得進度」；代診致歷史不足 → 降級為基準線並註明。};
+\end{tikzpicture}
