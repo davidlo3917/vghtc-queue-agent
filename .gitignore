@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Data (collector output; originals live in the GCS bucket)
+*.db
+*.db-wal
+*.db-shm
+*.csv
+status.json
+collector/schedules/*.pdf
+
+# LaTeX intermediates (docs/proposal)
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+docs/proposal/main.pdf
+docs/proposal/main-lean.pdf
+docs/proposal/figures/*_standalone.pdf
+
+# OS
+.DS_Store
